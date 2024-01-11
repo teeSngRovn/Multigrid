@@ -1,13 +1,14 @@
 import numpy as np
 from enum import Enum
+import matplotlib.pyplot as plt
 
 class BoundaryType(Enum):
     none = 0
-    diriclet = 1
+    dirichlet = 1
     neumann = 2
 
 class Boundary:
-    def __init__(self, type:BoundaryType = BoundaryType.dirichlet, val:float = 0):
+    def __init__(self, type:BoundaryType = BoundaryType.dirichlet, val = 0):
         '''
         type : 边界类型
         val : 边界值
@@ -16,10 +17,10 @@ class Boundary:
         self.val = val
 
     def change2dirichlet(self, val:float):
-        self.type = BoundaryType.diriclet
+        self.type = BoundaryType.dirichlet
         self.val = val
 
-    def change2neumann(self, val:float):
+    def change2neumann(self, val):
         self.type = BoundaryType.neumann
         self.val = val
 
@@ -46,9 +47,9 @@ class RecGrid:
         
         # 矩形的点
         self.ld = Point(xlower, ylower, n0 = 0, n1 = 0)
-        self.rd = Point(xupper, ylower, n0 = nlevel - 1, n1 = 0)
-        self.lu = Point(xlower, yupper, n0 = 0, n1 = nlevel - 1)
-        self.ru = Point(xupper, yupper, n0 = nlevel - 1, n1 = nlevel - 1)
+        self.rd = Point(xupper, ylower, n0 = nlevel, n1 = 0)
+        self.lu = Point(xlower, yupper, n0 = 0, n1 = nlevel)
+        self.ru = Point(xupper, yupper, n0 = nlevel, n1 = nlevel)
         
         # 矩形的边
         self.upper = Line(self.lu, self.ru, boundaries["upper"])
@@ -69,7 +70,7 @@ class RecGrid:
         由矩形边界给出一个当前level的边界矩阵
         '''
         edgeList = [self.upper, self.lower, self.lleft, self.right]
-        boundary:list[list[Boundary]] = [[Boundary(BoundaryType.none, 0)]*(self.nlevel+1)]*(self.nlevel+1)
+        boundary:list[list[Boundary]] = [[Boundary(BoundaryType.none, 0) for _ in range(self.nlevel+1)]for _ in range(self.nlevel+1)]
         for edge in edgeList:
             p1 = edge.p1
             p2 = edge.p2
@@ -77,31 +78,35 @@ class RecGrid:
             n1 = p2.n1
             if (n0 == p2.n0):
                 for i in range(self.nlevel + 1):
+                    if boundary[n0][i].type == BoundaryType.dirichlet: continue
                     boundary[n0][i] = Boundary(type = edge.boundary.type, val = edge.boundary.val)
             else:
                 for i in range(self.nlevel + 1):
+                    if boundary[i][n1].type == BoundaryType.dirichlet: continue
                     boundary[i][n1] = Boundary(type = edge.boundary.type, val = edge.boundary.val)
 
         return boundary
-
-                
 
     def constructSolutionMatrixFromFunction(self, f0:'function')->'np.array':
         '''
         由函数f0得到当前grid上生成矩阵
         '''
-        x = np.linspace(self.xlower, self.xupper, self.nlevel + 1)
-        y = np.linspace(self.ylower, self.yupper, self.nlevel + 1)
+        x = np.linspace(self.ld.x, self.rd.x, self.nlevel + 1)
+        y = np.linspace(self.ld.y, self.lu.y, self.nlevel + 1)
         xx, yy = np.meshgrid(x, y, indexing="ij")
         f = f0(xx, yy)
         
         return f
-
-    def PlotGrid(self):
-        '''
-        绘制网格点
-        '''
-        pass
+    
+    def ApplyBoundaryMatrix(self, matrix:'np.array', boundaryMatrix:'list[list[Boundary]]')->'np.array':
+        sizeY = matrix.shape[0]
+        sizeX = matrix.shape[1]
+        for i in range(sizeX):
+            for j in range(sizeY):
+                if (boundaryMatrix[i][j].type != BoundaryType.dirichlet): continue
+                matrix[i][j] = boundaryMatrix[i][j].val
+        
+        return matrix
 
 class Multigrid:
     def __init__(self, iterMethod:'function', level0:int = 4):
@@ -134,16 +139,20 @@ class Multigrid:
         self.grid:'RecGrid' = grid.constructGrid(self.level)
         
         # f代表当前迭代下的解
-        self.f = self.grid.constructMatrixFromFunction(f0)
-        
+        self.f = self.grid.constructSolutionMatrixFromFunction(f0)
+
         # boundary代表边界的矩阵表示
         self.boundary = self.grid.constructBoundaryMatrix()
 
-        for i in range(3):
-            self.restriction()
-            self.Iteration()
-            self.prolongation()
+        # 给初值施加边界条件
+        self.f = self.grid.ApplyBoundaryMatrix(matrix = self.f, boundaryMatrix=self.boundary)
 
+        for i in range(10):
+            # self.restriction()
+            self.Iteration(boundary = self.boundary)
+            # self.prolongation()
+
+        PlotMatrix(self.f)
         solution = Solution(self.f)
         
         return solution
@@ -168,12 +177,14 @@ class Multigrid:
     def restriction(self):
         '''
         从nlevel大的网格到nlevel小的网格, 默认2n -> n;
+        注意在改动解f时boundary也是要变动的
         '''
         pass
 
     def prolongation(self):
         '''
         从nlevel小的网格到nlevel大的网格, 默认n -> 2n;
+        注意在改动解f时boundary也是要变动的
         '''
         pass
 
@@ -185,15 +196,21 @@ class RelaxationMethod:
         f : 当前的解
         grid : 所构造的网格
         '''
-        error:float = 0
-        sizeY = len(boundary)
-        sizeX = len(boundary[0])
+        error:float = 0.0
+        sizeX = len(boundary)
+        sizeY = len(boundary[0])
         for i in range(sizeX):
             for j in range(sizeY):
+                if (boundary[i][j].type == BoundaryType.dirichlet): continue
+                if (boundary[i][j].type == BoundaryType.neumann):
+                    offsetI = boundary[i][j].val[0]
+                    offsetJ = boundary[i][j].val[1]
+                    val = f[i+offsetI][j+offsetJ]
+                    f[i][j] = val
                 if (boundary[i][j].type == BoundaryType.none):
                     val = (f[i-1][j] + f[i+1][j] + f[i][j-1]+f[i][j+1])/4
                     dval = f[i][j] - val
-                    error = np.max(error, np.abs(dval))
+                    # error = float(np.max(error, np.abs(dval)))
                     f[i][j] = val
         
         return f
@@ -209,29 +226,50 @@ class Problem2D:
         self.func = f0
         self.grid = grid
         self.method = method
-        self.solution = Solution()
+        self.solution = Solution(None)
 
     def solve(self)->"Solution":
-        self.solution = self.method.solve(self.f0, self.grid)
+        self.solution = self.method.solve(self.func, self.grid)
         return self.solution
 
 
 def Func(xx, yy):
-    return np.sin(xx)*np.cos(yy)
+    return 0*xx
+
+def PlotMatrix(matrix):
+    plt.matshow(matrix,cmap=plt.cm.Reds)
+    plt.show()
+
 
 if __name__=="__main__":
+    nlevel = 10
     x0 = 0
     x1 = np.pi
     y0 = 0
     y1 = np.pi
+    '''
+    注: 这里的upper是从x,y方向看, x代表i列, y代表j行
+    Example:
+    →y(j) 0 - pi
+    ↓x(i) 0 - pi
+                            lleft
+                        
+                        [[1,2,3,4,5],
+                         [6,7,8,9,0],
+                lower    [1,2,3,4,5],   upper
+                         [6,7,8,9,0],
+                         [1,2,3,4,5]]       
+                            
+                            right
+    '''
     recBoundary = {
-        "upper": Boundary(type = BoundaryType.diriclet),
-        "lower": Boundary(type = BoundaryType.diriclet),
-        "lleft": Boundary(type = BoundaryType.diriclet),
-        "right": Boundary(type = BoundaryType.diriclet)
+        "upper": Boundary(type = BoundaryType.dirichlet, val = 1),
+        "lower": Boundary(type = BoundaryType.dirichlet, val = 0),
+        "lleft": Boundary(type = BoundaryType.neumann, val = [1,0]),
+        "right": Boundary(type = BoundaryType.neumann, val = [-1,0])
     }
-    squareGrid = RecGrid(nlevel = 4, xlower = x0, xupper = x1, ylower = y0, yupper = y1, boundaries = recBoundary)
+    squareGrid = RecGrid(nlevel = nlevel, xlower = x0, xupper = x1, ylower = y0, yupper = y1, boundaries = recBoundary)
     RelaxationMethods = RelaxationMethod()
-    MultigridMethod = Multigrid(RelaxationMethods.GaussSeidel, level0 = 4)
+    MultigridMethod = Multigrid(RelaxationMethods.GaussSeidel, level0 = nlevel)
     problem = Problem2D(f0 = Func, method = MultigridMethod, grid = squareGrid)
     solution = problem.solve()
