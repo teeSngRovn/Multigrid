@@ -242,11 +242,6 @@ def PlotMatrix(matrix):
 
 
 if __name__=="__main__":
-    nlevel = 10
-    x0 = 0
-    x1 = np.pi
-    y0 = 0
-    y1 = np.pi
     '''
     注: 这里的upper是从x,y方向看, x代表i列, y代表j行
     Example:
@@ -262,13 +257,18 @@ if __name__=="__main__":
                             
                             right
     '''
+    nlevel = 10
+    xlower = 0
+    xupper = np.pi
+    ylower = 0
+    yupper = np.pi
     recBoundary = {
         "upper": Boundary(type = BoundaryType.dirichlet, val = 1),
         "lower": Boundary(type = BoundaryType.dirichlet, val = 0),
         "lleft": Boundary(type = BoundaryType.neumann, val = [1,0]),
         "right": Boundary(type = BoundaryType.neumann, val = [-1,0])
     }
-    squareGrid = RecGrid(nlevel = nlevel, xlower = x0, xupper = x1, ylower = y0, yupper = y1, boundaries = recBoundary)
+    squareGrid = RecGrid(nlevel = nlevel, xlower = xlower, xupper = xupper, ylower = ylower, yupper = yupper, boundaries = recBoundary)
     RelaxationMethods = RelaxationMethod()
     MultigridMethod = Multigrid(RelaxationMethods.GaussSeidel, level0 = nlevel)
     problem = Problem2D(f0 = Func, method = MultigridMethod, grid = squareGrid)
