@@ -108,13 +108,16 @@ class RecGrid:
         pass
 
 class Multigrid:
-    def __init__(self, level0:int = 4):        
+    def __init__(self, iterMethod:'function', level0:int = 4):
         # f代表当前迭代下的解
         self.grid:'RecGrid'
         self.f:'np.array'
         # boundary代表边界的矩阵表示
         self.boundaryVal:list[list[float]]
         self.boundaryType:list[list[BoundaryType]]
+
+        # iterMethod为当前采用的松弛迭代法
+        self.iterMethod = iterMethod
 
         # iternum当前迭代步数
         self.iternum:int = 0
@@ -129,6 +132,9 @@ class Multigrid:
         self.fHistory:list['np.array'] = list()
     
     def solve(self, f0:'function', grid:'RecGrid')->'Solution':
+        '''
+        用松弛方法在多重网格法下求解给定参数的问题
+        '''
         # grid当前的网格
         self.grid:'RecGrid' = grid.constructGrid(self.level)
         
@@ -139,7 +145,6 @@ class Multigrid:
         self.boundaryVal, self.boundaryType = self.grid.constructBoundaryMatrix()
 
         for i in range(3):
-            self.iternum += 1
             self.restriction()
             self.Iteration()
             self.prolongation()
@@ -155,15 +160,14 @@ class Multigrid:
         '''
         return self.level
 
-    def Iteration(self, method:'function', boundary:'function'):
+    def Iteration(self, boundary:'function'):
         '''
         传入一个迭代的方法和边界, 用该方法迭代一步
         method : 要使用的松弛迭代方法
         boundary : 边界条件
         '''
+        self.f = self.iterMethod(self.f, boundary = boundary)
         self.fHistory.append(self.f)
-        self.f = method(self.f, boundary = boundary)
-        self.iternum += 1
         return self.f
 
     def restriction(self):
@@ -180,7 +184,7 @@ class Multigrid:
 
 
 class RelaxationMethod:
-    def GaussSeidel(self, f: 'np.array', grid:'RecGrid'):
+    def GaussSeidel(self, f: 'np.array', boundary:'iter'):
         '''
         迭代求解一步
         f : 当前的解
@@ -201,13 +205,27 @@ class Problem2D:
         self.method = method
         self.solution = Solution()
 
-    def solve(self):
-        solution = self.method.solve(self.f0, self.grid)
-        return solution
+    def solve(self)->"Solution":
+        self.solution = self.method.solve(self.f0, self.grid)
+        return self.solution
 
 
 def Func(xx, yy):
     return np.sin(xx)*np.cos(yy)
 
-RelaxationMethods = RelaxationMethod()
-SolvingMethod = Multigrid()
+if __name__=="__main__":
+    x0 = 0
+    x1 = np.pi
+    y0 = 0
+    y1 = np.pi
+    recBoundary = {
+        "upper": Boundary(type = BoundaryType.diriclet),
+        "lower": Boundary(type = BoundaryType.diriclet),
+        "lleft": Boundary(type = BoundaryType.diriclet),
+        "right": Boundary(type = BoundaryType.diriclet)
+    }
+    squareGrid = RecGrid(nlevel = 4, xlower = x0, xupper = x1, ylower = y0, yupper = y1, boundaries = recBoundary)
+    RelaxationMethods = RelaxationMethod()
+    MultigridMethod = Multigrid(RelaxationMethods.GaussSeidel, level0 = 4)
+    problem = Problem2D(f0 = Func, method = MultigridMethod, grid = squareGrid)
+    solution = problem.solve()
