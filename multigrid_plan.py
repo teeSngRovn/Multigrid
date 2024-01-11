@@ -57,12 +57,15 @@ class RecGrid:
         self.lleft = Line(self.lu, self.ld, boundaries["lleft"])
         self.right = Line(self.ru, self.rd, boundaries["right"])
 
+        # 存一下变量
+        self.boundaries = boundaries
+
     def constructGrid(self, nlevel) -> 'RecGrid':
         '''
         构造网格, nlevel代表当前网格的粗细程度
         '''
         if nlevel == self.nlevel: return self
-        result = RecGrid(nlevel, self.xlower, self.xupper, self.ylower, self.yupper, self.boundaries)
+        result = RecGrid(nlevel, self.ld.x, self.rd.x, self.ld.y, self.lu.y, self.boundaries)
         return result
        
     def constructBoundaryMatrix(self)->'list[list[Boundary]]':
@@ -110,8 +113,9 @@ class RecGrid:
 
 class Multigrid:
     def __init__(self, iterMethod:'function', level0:int = 4):
-        # f代表当前迭代下的解
+        # grid代表当前粗糙程度的网格
         self.grid:'RecGrid'
+        # f代表当前迭代下的解
         self.f:'np.array'
         # boundary代表边界的矩阵表示
         self.boundary:list[list[Boundary]]
@@ -142,17 +146,20 @@ class Multigrid:
         self.f = self.grid.constructSolutionMatrixFromFunction(f0)
 
         # boundary代表边界的矩阵表示
-        self.boundary = self.grid.constructBoundaryMatrix()
+        self.boundary:'list[list[Boundary]]' = self.grid.constructBoundaryMatrix()
 
         # 给初值施加边界条件
         self.f = self.grid.ApplyBoundaryMatrix(matrix = self.f, boundaryMatrix=self.boundary)
 
         for i in range(10):
-            # self.restriction()
+            PlotMatrix(self.f,"restriction")
+            self.restriction()
+            PlotMatrix(self.f,"restriction")
             self.Iteration(boundary = self.boundary)
-            # self.prolongation()
+            PlotMatrix(self.f,"iteration")
+            self.prolongation()
+            PlotMatrix(self.f,"prolongation")
 
-        PlotMatrix(self.f)
         solution = Solution(self.f)
         
         return solution
@@ -178,15 +185,60 @@ class Multigrid:
         '''
         从nlevel大的网格到nlevel小的网格, 默认2n -> n;
         注意在改动解f时boundary也是要变动的
+        使用全加权方法
         '''
-        pass
+        self.level = self.level // 2
+        self.LevelHistory.append(self.level)
+        self.grid = self.grid.constructGrid(self.level)
+        self.boundary = self.grid.constructBoundaryMatrix()
+        sizeX = len(self.boundary)
+        sizeY = len(self.boundary[0])
+        f = np.zeros((sizeX, sizeY))
+        for i in range(sizeX):
+            for j in range(sizeY):
+                if i == 0 or j == 0 or i == sizeX - 1 or j == sizeY - 1: 
+                    # 边界，为了迎合Neumann边界条件
+                    f[i, j] = self.f[i * 2, j * 2]
+                else:
+                    # 内点
+                    # i,j是粗网格的坐标，cx,cy是细网格的坐标
+                    cx = i * 2
+                    cy = j * 2
+                    f[i , j] = 1/4*(self.f[cx, cy]) + 1/8*(self.f[cx - 1, cy] 
+                                                + self.f[cx + 1, cy] + self.f[cx, cy - 1] + self.f[cx, cy + 1]) + 1/16*(self.f[cx - 1, cy - 1] + self.f[cx + 1, cy - 1] + self.f[cx - 1, cy + 1] + self.f[cx + 1, cy + 1])
+        
+        self.f = self.grid.ApplyBoundaryMatrix(matrix = f, boundaryMatrix=self.boundary)
+
 
     def prolongation(self):
         '''
         从nlevel小的网格到nlevel大的网格, 默认n -> 2n;
         注意在改动解f时boundary也是要变动的
         '''
-        pass
+        self.level = self.level * 2
+        self.LevelHistory.append(self.level)
+        self.grid = self.grid.constructGrid(self.level)
+        self.boundary = self.grid.constructBoundaryMatrix()
+        sizeX = len(self.boundary)
+        sizeY = len(self.boundary[0])
+        f = np.zeros((sizeX, sizeY))
+        for i in range(sizeX):
+            for j in range(sizeY):
+                # i,j是细网格的坐标
+                if i % 2 == 0 and j % 2 == 0: 
+                    # 与原坐标点重合
+                    f[i,j] = self.f[i//2, j//2]
+                elif i % 2 == 0 and j % 2 == 1:
+                    # 与原坐标点在x方向重合
+                    f[i,j] = (self.f[i//2, j//2] + self.f[i//2, j//2 + 1])/2
+                elif i % 2 == 1 and j % 2 == 0:
+                    # 与原坐标点在y方向重合
+                    f[i,j] = (self.f[i//2, j//2] + self.f[i//2 + 1, j//2])/2
+                else:
+                    # 与原坐标点不重合
+                    f[i,j] = (self.f[i//2, j//2] + self.f[i//2 + 1, j//2] + self.f[i//2, j//2 + 1] + self.f[i//2 + 1, j//2 + 1])/4
+        
+        self.f = self.grid.ApplyBoundaryMatrix(matrix = f, boundaryMatrix=self.boundary)
 
 
 class RelaxationMethod:
@@ -210,7 +262,7 @@ class RelaxationMethod:
                 if (boundary[i][j].type == BoundaryType.none):
                     val = (f[i-1][j] + f[i+1][j] + f[i][j-1]+f[i][j+1])/4
                     dval = f[i][j] - val
-                    # error = float(np.max(error, np.abs(dval)))
+                    error = float(np.max(error, np.abs(dval)))
                     f[i][j] = val
         
         return f
@@ -236,14 +288,15 @@ class Problem2D:
 def Func(xx, yy):
     return 0*xx
 
-def PlotMatrix(matrix):
+def PlotMatrix(matrix, title:str):
+    return
     plt.matshow(matrix,cmap=plt.cm.Reds)
     plt.show()
 
 
 if __name__=="__main__":
     '''
-    注: 这里的upper是从x,y方向看, x代表i列, y代表j行
+    注: 这里的upper是从x,y方向看, x代表i行, y代表j列
     Example:
     →y(j) 0 - pi
     ↓x(i) 0 - pi
@@ -257,7 +310,7 @@ if __name__=="__main__":
                             
                             right
     '''
-    nlevel = 10
+    nlevel = 4
     xlower = 0
     xupper = np.pi
     ylower = 0
