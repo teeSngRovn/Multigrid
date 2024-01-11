@@ -63,33 +63,7 @@ class RecGrid:
         if nlevel == self.nlevel: return self
         result = RecGrid(nlevel, self.xlower, self.xupper, self.ylower, self.yupper, self.boundaries)
         return result
-
-    ''' 一个废掉的函数, 改为了更好的形式来写, 直接返回边界
-    def constructBoundaryMatrix(self)->'tuple[list[list[float]],list[list[BoundaryType]]]':
-        # 由矩形边界给出一个当前level的边界矩阵
-        edgeList = [self.upper, self.lower, self.lleft, self.right]
-        boundaryVal:list[list[float]] = [[0.0]*(self.nlevel+1)]*(self.nlevel+1)
-        boundaryType:list[list[BoundaryType]] = [[BoundaryType.none]*(self.nlevel+1)]*(self.nlevel+1)
-        boundary:list[list[Boundary]] = [[Boundary(BoundaryType.none, 0)]*(self.nlevel+1)]*(self.nlevel+1)
-        for edge in edgeList:
-            p1 = edge.p1
-            p2 = edge.p2
-            n0 = p1.n0
-            n1 = p2.n1
-            if (n0 == p2.n0):
-                for i in range(self.nlevel + 1):
-                    boundaryVal[n0][i] = edge.boundary.val
-                    boundaryType[n0][i] = edge.boundary.type
-                    boundary[n0][i] = edge.boundary
-            else:
-                for i in range(self.nlevel + 1):
-                    boundaryVal[i][n1] = edge.boundary.val
-                    boundaryType[i][n1] = edge.boundary.type
-                    boundary[i][n1] = edge.boundary
-
-        return boundaryVal, boundaryType
-    '''
-    
+       
     def constructBoundaryMatrix(self)->'list[list[Boundary]]':
         '''
         由矩形边界给出一个当前level的边界矩阵
