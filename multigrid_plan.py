@@ -64,14 +64,13 @@ class RecGrid:
         result = RecGrid(nlevel, self.xlower, self.xupper, self.ylower, self.yupper, self.boundaries)
         return result
 
-
+    ''' 一个废掉的函数, 改为了更好的形式来写, 直接返回边界
     def constructBoundaryMatrix(self)->'tuple[list[list[float]],list[list[BoundaryType]]]':
-        '''
-        由矩形边界给出一个当前level的边界矩阵
-        '''
+        # 由矩形边界给出一个当前level的边界矩阵
         edgeList = [self.upper, self.lower, self.lleft, self.right]
-        boundaryType = [[BoundaryType.none]*(self.nlevel+1)]*(self.nlevel+1)
-        boundaryVal = [[0.0]*(self.nlevel+1)]*(self.nlevel+1)
+        boundaryVal:list[list[float]] = [[0.0]*(self.nlevel+1)]*(self.nlevel+1)
+        boundaryType:list[list[BoundaryType]] = [[BoundaryType.none]*(self.nlevel+1)]*(self.nlevel+1)
+        boundary:list[list[Boundary]] = [[Boundary(BoundaryType.none, 0)]*(self.nlevel+1)]*(self.nlevel+1)
         for edge in edgeList:
             p1 = edge.p1
             p2 = edge.p2
@@ -81,12 +80,35 @@ class RecGrid:
                 for i in range(self.nlevel + 1):
                     boundaryVal[n0][i] = edge.boundary.val
                     boundaryType[n0][i] = edge.boundary.type
+                    boundary[n0][i] = edge.boundary
             else:
                 for i in range(self.nlevel + 1):
                     boundaryVal[i][n1] = edge.boundary.val
                     boundaryType[i][n1] = edge.boundary.type
+                    boundary[i][n1] = edge.boundary
 
         return boundaryVal, boundaryType
+    '''
+    
+    def constructBoundaryMatrix(self)->'list[list[Boundary]]':
+        '''
+        由矩形边界给出一个当前level的边界矩阵
+        '''
+        edgeList = [self.upper, self.lower, self.lleft, self.right]
+        boundary:list[list[Boundary]] = [[Boundary(BoundaryType.none, 0)]*(self.nlevel+1)]*(self.nlevel+1)
+        for edge in edgeList:
+            p1 = edge.p1
+            p2 = edge.p2
+            n0 = p1.n0
+            n1 = p2.n1
+            if (n0 == p2.n0):
+                for i in range(self.nlevel + 1):
+                    boundary[n0][i] = Boundary(type = edge.boundary.type, val = edge.boundary.val)
+            else:
+                for i in range(self.nlevel + 1):
+                    boundary[i][n1] = Boundary(type = edge.boundary.type, val = edge.boundary.val)
+
+        return boundary
 
                 
 
@@ -113,8 +135,7 @@ class Multigrid:
         self.grid:'RecGrid'
         self.f:'np.array'
         # boundary代表边界的矩阵表示
-        self.boundaryVal:list[list[float]]
-        self.boundaryType:list[list[BoundaryType]]
+        self.boundary:list[list[Boundary]]
 
         # iterMethod为当前采用的松弛迭代法
         self.iterMethod = iterMethod
@@ -142,7 +163,7 @@ class Multigrid:
         self.f = self.grid.constructMatrixFromFunction(f0)
         
         # boundary代表边界的矩阵表示
-        self.boundaryVal, self.boundaryType = self.grid.constructBoundaryMatrix()
+        self.boundary = self.grid.constructBoundaryMatrix()
 
         for i in range(3):
             self.restriction()
@@ -184,13 +205,24 @@ class Multigrid:
 
 
 class RelaxationMethod:
-    def GaussSeidel(self, f: 'np.array', boundary:'iter'):
+    def GaussSeidel(self, f: 'np.array', boundary:'list[list[Boundary]]'):
         '''
         迭代求解一步
         f : 当前的解
         grid : 所构造的网格
         '''
-        pass
+        error:float = 0
+        sizeY = len(boundary)
+        sizeX = len(boundary[0])
+        for i in range(sizeX):
+            for j in range(sizeY):
+                if (boundary[i][j].type == BoundaryType.none):
+                    val = (f[i-1][j] + f[i+1][j] + f[i][j-1]+f[i][j+1])/4
+                    dval = f[i][j] - val
+                    error = np.max(error, np.abs(dval))
+                    f[i][j] = val
+        
+        return f
 
 
 class Solution:
