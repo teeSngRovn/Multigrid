@@ -24,7 +24,7 @@ class Boundary:
         self.val = val
 
 class Point:
-    def __init__(self, x, y, n0 = 0, n1 = 0):
+    def __init__(self, x:float, y:float, n0:int = 0, n1:int = 0):
         self.x = x
         self.y = y
         self.n0 = n0
@@ -37,7 +37,7 @@ class Line:
         self.p2 = p2
 
 class RecGrid:
-    def __init__(self, nlevel, xlower, xupper, ylower, yupper, boundaries:'dict[str, Boundary]'):
+    def __init__(self, nlevel:int, xlower:float, xupper:float, ylower:float, yupper:float, boundaries:'dict[str, Boundary]'):
         '''
         构造网格, nlevel代表当前网格的粗细程度
         '''
@@ -98,8 +98,6 @@ class RecGrid:
         y = np.linspace(self.ylower, self.yupper, self.nlevel + 1)
         xx, yy = np.meshgrid(x, y, indexing="ij")
         f = f0(xx, yy)
-
-
         
         return f
 
@@ -108,17 +106,15 @@ class RecGrid:
         绘制网格点
         '''
         pass
-    
-class Multigrid:
-    def __init__(self, f0:'function', level0:int = 4):
-        # grid当前的网格
-        self.grid:'RecGrid' = RecGrid(level0)
-        
-        # f代表当前迭代下的解
-        self.f = self.grid.constructMatrixFromFunction(f0)
 
+class Multigrid:
+    def __init__(self, level0:int = 4):        
+        # f代表当前迭代下的解
+        self.grid:'RecGrid'
+        self.f:'np.array'
         # boundary代表边界的矩阵表示
-        self.boundaryVal, self.boundaryType = self.grid.constructBoundaryMatrix()
+        self.boundaryVal:list[list[float]]
+        self.boundaryType:list[list[BoundaryType]]
 
         # iternum当前迭代步数
         self.iternum:int = 0
@@ -130,7 +126,34 @@ class Multigrid:
         self.LevelHistory = [level0]
 
         # 迭代解的历史
-        self.fHistory = [self.f]
+        self.fHistory:list['np.array'] = list()
+    
+    def solve(self, f0:'function', grid:'RecGrid')->'Solution':
+        # grid当前的网格
+        self.grid:'RecGrid' = grid.constructGrid(self.level)
+        
+        # f代表当前迭代下的解
+        self.f = self.grid.constructMatrixFromFunction(f0)
+        
+        # boundary代表边界的矩阵表示
+        self.boundaryVal, self.boundaryType = self.grid.constructBoundaryMatrix()
+
+        for i in range(3):
+            self.iternum += 1
+            self.restriction()
+            self.Iteration()
+            self.prolongation()
+
+        solution = Solution(self.f)
+        
+        return solution
+
+
+    def getNLevel(self)->int:
+        '''
+        获取当前的网格粗细程度
+        '''
+        return self.level
 
     def Iteration(self, method:'function', boundary:'function'):
         '''
@@ -155,12 +178,6 @@ class Multigrid:
         '''
         pass
 
-    def getNLevel(self):
-        '''
-        获取当前的网格粗细程度
-        '''
-        return self.level
-
 
 class RelaxationMethod:
     def GaussSeidel(self, f: 'np.array', grid:'RecGrid'):
@@ -171,7 +188,26 @@ class RelaxationMethod:
         '''
         pass
 
+
+class Solution:
+    def __init__(self, anything):
+        self.result = anything
+
+
+class Problem2D:
+    def __init__(self, f0: 'function', method:'Multigrid', grid:'RecGrid'):
+        self.func = f0
+        self.grid = grid
+        self.method = method
+        self.solution = Solution()
+
+    def solve(self):
+        solution = self.method.solve(self.f0, self.grid)
+        return solution
+
+
 def Func(xx, yy):
     return np.sin(xx)*np.cos(yy)
 
-methods = RelaxationMethod()
+RelaxationMethods = RelaxationMethod()
+SolvingMethod = Multigrid()
