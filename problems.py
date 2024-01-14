@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-from multigrid_plan import Multigrid, RecGrid, Problem2D, Solution, Boundary, BoundaryType, RelaxationMethod
+from src.Equation2D import Multigrid, RecGrid, Problem2D, Solution, Boundary, BoundaryType, RelaxationMethod
 
 def SpecialError(f):
     return np.max(np.abs(f - 1))
@@ -121,9 +121,7 @@ def PoissonMultigrid(grid:'RecGrid')->'Solution':
     while err >= 0.001:
         _, err = MultigridMethod.Iteration(Unit)
     MultigridMethod.prolongation()
-    # while err >= 0.001:
-    #     _, err = MultigridMethod.Iteration(Zero)
-
+    
     solution = Solution(MultigridMethod.f)
     print(MultigridMethod.errHistory)
     PlotMatrix(MultigridMethod.f)

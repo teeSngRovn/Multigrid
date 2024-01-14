@@ -1,0 +1,303 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module 2DEquation</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>2DEquation</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:c%3A%5Cusers%5Csteven_rong%5Cdesktop%5Czju%5C%E5%A4%A7%E4%B8%89%5C%E4%B8%8A%5C%E8%AE%A1%E7%AE%97%E7%89%A9%E7%90%86%5Clec%26proj%5Cproject%5C2dequation.py">c:\users\steven_rong\desktop\zju\大三\上\计算物理\lec&proj\project\2dequation.py</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="builtins.html#object">builtins.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="2DEquation.html#Boundary">Boundary</a>
+</font></dt><dt><font face="helvetica, arial"><a href="2DEquation.html#Line">Line</a>
+</font></dt><dt><font face="helvetica, arial"><a href="2DEquation.html#Multigrid">Multigrid</a>
+</font></dt><dt><font face="helvetica, arial"><a href="2DEquation.html#Point">Point</a>
+</font></dt><dt><font face="helvetica, arial"><a href="2DEquation.html#Problem2D">Problem2D</a>
+</font></dt><dt><font face="helvetica, arial"><a href="2DEquation.html#RecGrid">RecGrid</a>
+</font></dt><dt><font face="helvetica, arial"><a href="2DEquation.html#RelaxationMethod">RelaxationMethod</a>
+</font></dt><dt><font face="helvetica, arial"><a href="2DEquation.html#Solution">Solution</a>
+</font></dt></dl>
+</dd>
+<dt><font face="helvetica, arial"><a href="enum.html#Enum">enum.Enum</a>(<a href="builtins.html#object">builtins.object</a>)
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="2DEquation.html#BoundaryType">BoundaryType</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Boundary">class <strong>Boundary</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#Boundary">Boundary</a>(type:&nbsp;2DEquation.<a href="#BoundaryType">BoundaryType</a>&nbsp;=&nbsp;&amp;lt;<a href="#BoundaryType">BoundaryType</a>.dirichlet:&nbsp;1&amp;gt;,&nbsp;val=0)<br>
+&nbsp;<br>
+<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Boundary-__init__"><strong>__init__</strong></a>(self, type: 2DEquation.BoundaryType = &lt;BoundaryType.dirichlet: 1&gt;, val=0)</dt><dd><tt>type&nbsp;:&nbsp;边界类型<br>
+val&nbsp;:&nbsp;边界值</tt></dd></dl>
+
+<dl><dt><a name="Boundary-change2dirichlet"><strong>change2dirichlet</strong></a>(self, val: float)</dt></dl>
+
+<dl><dt><a name="Boundary-change2discrete"><strong>change2discrete</strong></a>(self, val: int)</dt><dd><tt>val&nbsp;:&nbsp;何种粗糙程度定义的</tt></dd></dl>
+
+<dl><dt><a name="Boundary-change2neumann"><strong>change2neumann</strong></a>(self, val)</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="BoundaryType">class <strong>BoundaryType</strong></a>(<a href="enum.html#Enum">enum.Enum</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#BoundaryType">BoundaryType</a>(value,&nbsp;names=None,&nbsp;*,&nbsp;module=None,&nbsp;qualname=None,&nbsp;type=None,&nbsp;start=1)<br>
+&nbsp;<br>
+An&nbsp;enumeration.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%"><dl><dt>Method resolution order:</dt>
+<dd><a href="2DEquation.html#BoundaryType">BoundaryType</a></dd>
+<dd><a href="enum.html#Enum">enum.Enum</a></dd>
+<dd><a href="builtins.html#object">builtins.object</a></dd>
+</dl>
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>dirichlet</strong> = &lt;BoundaryType.dirichlet: 1&gt;</dl>
+
+<dl><dt><strong>discrete</strong> = &lt;BoundaryType.discrete: 3&gt;</dl>
+
+<dl><dt><strong>neumann</strong> = &lt;BoundaryType.neumann: 2&gt;</dl>
+
+<dl><dt><strong>none</strong> = &lt;BoundaryType.none: 0&gt;</dl>
+
+<hr>
+Data descriptors inherited from <a href="enum.html#Enum">enum.Enum</a>:<br>
+<dl><dt><strong>name</strong></dt>
+<dd><tt>The&nbsp;name&nbsp;of&nbsp;the&nbsp;Enum&nbsp;member.</tt></dd>
+</dl>
+<dl><dt><strong>value</strong></dt>
+<dd><tt>The&nbsp;value&nbsp;of&nbsp;the&nbsp;Enum&nbsp;member.</tt></dd>
+</dl>
+<hr>
+Readonly properties inherited from <a href="enum.html#EnumMeta">enum.EnumMeta</a>:<br>
+<dl><dt><strong>__members__</strong></dt>
+<dd><tt>Returns&nbsp;a&nbsp;mapping&nbsp;of&nbsp;member&nbsp;name-&gt;value.<br>
+&nbsp;<br>
+This&nbsp;mapping&nbsp;lists&nbsp;all&nbsp;enum&nbsp;members,&nbsp;including&nbsp;aliases.&nbsp;Note&nbsp;that&nbsp;this<br>
+is&nbsp;a&nbsp;read-only&nbsp;view&nbsp;of&nbsp;the&nbsp;internal&nbsp;mapping.</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Line">class <strong>Line</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#Line">Line</a>(p1:&nbsp;2DEquation.<a href="#Point">Point</a>,&nbsp;p2:&nbsp;2DEquation.<a href="#Point">Point</a>,&nbsp;boundary:&nbsp;2DEquation.<a href="#Boundary">Boundary</a>)<br>
+&nbsp;<br>
+<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Line-__init__"><strong>__init__</strong></a>(self, p1: 2DEquation.Point, p2: 2DEquation.Point, boundary: 2DEquation.Boundary)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Multigrid">class <strong>Multigrid</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#Multigrid">Multigrid</a>(iterMethod:&nbsp;'function',&nbsp;grid:&nbsp;'<a href="#RecGrid">RecGrid</a>')<br>
+&nbsp;<br>
+<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Multigrid-Iteration"><strong>Iteration</strong></a>(self, f0: 'function') -&gt; 'tuple[np.array, float]'</dt><dd><tt>传入一个迭代的方法和边界,&nbsp;用该方法迭代一步<br>
+f0:&nbsp;可能存在的右侧函数</tt></dd></dl>
+
+<dl><dt><a name="Multigrid-__init__"><strong>__init__</strong></a>(self, iterMethod: 'function', grid: 'RecGrid')</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="Multigrid-getNLevel"><strong>getNLevel</strong></a>(self) -&gt; int</dt><dd><tt>获取当前的网格粗细程度</tt></dd></dl>
+
+<dl><dt><a name="Multigrid-prolongation"><strong>prolongation</strong></a>(self)</dt><dd><tt>从nlevel小的网格到nlevel大的网格,&nbsp;默认n&nbsp;-&gt;&nbsp;2n;<br>
+注意在改动解f时boundary也是要变动的</tt></dd></dl>
+
+<dl><dt><a name="Multigrid-restriction"><strong>restriction</strong></a>(self)</dt><dd><tt>从nlevel大的网格到nlevel小的网格,&nbsp;默认2n&nbsp;-&gt;&nbsp;n;<br>
+注意在改动解f时boundary也是要变动的<br>
+使用全加权方法</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Point">class <strong>Point</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#Point">Point</a>(x:&nbsp;float,&nbsp;y:&nbsp;float,&nbsp;n0:&nbsp;int&nbsp;=&nbsp;0,&nbsp;n1:&nbsp;int&nbsp;=&nbsp;0)<br>
+&nbsp;<br>
+<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Point-__init__"><strong>__init__</strong></a>(self, x: float, y: float, n0: int = 0, n1: int = 0)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Problem2D">class <strong>Problem2D</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#Problem2D">Problem2D</a>(SolveMethod:&nbsp;'function',&nbsp;grid:&nbsp;'<a href="#RecGrid">RecGrid</a>')<br>
+&nbsp;<br>
+<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Problem2D-__init__"><strong>__init__</strong></a>(self, SolveMethod: 'function', grid: 'RecGrid')</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="Problem2D-solve"><strong>solve</strong></a>(self) -&gt; 'Solution'</dt></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="RecGrid">class <strong>RecGrid</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#RecGrid">RecGrid</a>(nlevel:&nbsp;int,&nbsp;xlower:&nbsp;float,&nbsp;xupper:&nbsp;float,&nbsp;ylower:&nbsp;float,&nbsp;yupper:&nbsp;float,&nbsp;boundaries:&nbsp;'dict[str,&nbsp;<a href="#Boundary">Boundary</a>]')<br>
+&nbsp;<br>
+<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="RecGrid-ApplyBoundaryMatrix"><strong>ApplyBoundaryMatrix</strong></a>(self, matrix: 'np.array', boundaryMatrix: 'list[list[Boundary]]') -&gt; 'np.array'</dt><dd><tt>通过边界矩阵给当前解施加边界条件</tt></dd></dl>
+
+<dl><dt><a name="RecGrid-__init__"><strong>__init__</strong></a>(self, nlevel: int, xlower: float, xupper: float, ylower: float, yupper: float, boundaries: 'dict[str, Boundary]')</dt><dd><tt>构造网格,&nbsp;nlevel代表当前网格的粗细程度</tt></dd></dl>
+
+<dl><dt><a name="RecGrid-constructBoundaryMatrix"><strong>constructBoundaryMatrix</strong></a>(self) -&gt; 'list[list[Boundary]]'</dt><dd><tt>由矩形边界给出一个当前level的边界矩阵</tt></dd></dl>
+
+<dl><dt><a name="RecGrid-constructGrid"><strong>constructGrid</strong></a>(self, nlevel) -&gt; 'RecGrid'</dt><dd><tt>构造网格,&nbsp;nlevel代表当前网格的粗细程度</tt></dd></dl>
+
+<dl><dt><a name="RecGrid-constructMatrixFromFunction"><strong>constructMatrixFromFunction</strong></a>(self, f0: 'function') -&gt; 'list[list[float]]'</dt><dd><tt>由函数f0得到当前grid上生成矩阵</tt></dd></dl>
+
+<dl><dt><a name="RecGrid-constructZeroMatrix"><strong>constructZeroMatrix</strong></a>(self) -&gt; 'np.array'</dt><dd><tt>由函数f0得到当前grid上生成矩阵</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="RelaxationMethod">class <strong>RelaxationMethod</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="RelaxationMethod-GaussSeidel"><strong>GaussSeidel</strong></a>(self, f: 'np.array', boundary: 'tuple[list[list[Boundary]], float]', f0: 'np.array', ds: float = 0.1)</dt><dd><tt>迭代求解一步<br>
+f&nbsp;:&nbsp;当前的解<br>
+f0&nbsp;:&nbsp;泊松方程的矩阵<br>
+grid&nbsp;:&nbsp;所构造的网格</tt></dd></dl>
+
+<dl><dt><a name="RelaxationMethod-Jacobi"><strong>Jacobi</strong></a>(self, f: 'np.array', boundary: 'tuple[list[list[Boundary]], float]', f0: 'np.array', ds: float = 0.1)</dt><dd><tt>迭代求解一步<br>
+f&nbsp;:&nbsp;当前的解<br>
+f0&nbsp;:&nbsp;泊松方程的矩阵<br>
+grid&nbsp;:&nbsp;所构造的网格</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Solution">class <strong>Solution</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#Solution">Solution</a>(anything)<br>
+&nbsp;<br>
+<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Solution-__init__"><strong>__init__</strong></a>(self, anything)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table>
+</body></html>
