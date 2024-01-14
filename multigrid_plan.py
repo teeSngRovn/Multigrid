@@ -312,7 +312,7 @@ class RelaxationMethod:
                     val = f[i+offsetI][j+offsetJ]
                     f[i][j] = val
                 if (boundary[i][j].type == BoundaryType.none):
-                    val = (f[i-1][j] + f[i+1][j] + f[i][j-1]+f[i][j+1] - (ds**2)*f0[i][j])/4
+                    val = (f[i-1][j] + f[i+1][j] + f[i][j-1]+f[i][j+1] - ds*f0[i][j])/4
                     dval = f[i][j] - val
                     error = max(error, abs(dval))
                     f[i][j] = val

@@ -12,9 +12,12 @@ def Unit(xx, yy):
 def Zero(xx, yy):
     return 0
 
+def Func(xx,yy):
+    return np.sin(10*np.pi*xx)*np.sin(10*np.pi*yy)
+
 def PlotMatrix(matrix):
     # 指定颜色分辨率的边界
-    bounds = np.linspace(0, 1, 11)  # 0到1之间分成11份
+    bounds = np.linspace(-1, 1, 21)  # 0到1之间分成11份
     # 创建一个颜色映射对象，并绑定到数据范围  
     norm = mcolors.BoundaryNorm(bounds, plt.cm.Reds.N)
     # 使用 matshow 显示数据，并指定颜色映射和颜色分辨率  
@@ -100,6 +103,33 @@ def LaplaceMultigridJacobiFinite(grid:'RecGrid')->'Solution':
         
     return solution
 
+def PoissonMultigrid(grid:'RecGrid')->'Solution':
+    '''
+    用松弛方法在多重网格法下求解给定参数到指定误差的问题
+    '''
+    RelaxationMethods = RelaxationMethod()
+    MultigridMethod = Multigrid(RelaxationMethods.GaussSeidel, grid = grid)
+    # f代表当前迭代下的解, 生成初始解零构造
+    MultigridMethod.f = MultigridMethod.grid.constructZeroMatrix()
+    # boundary代表边界的矩阵表示
+    MultigridMethod.boundary:'list[list[Boundary]]' = MultigridMethod.grid.constructBoundaryMatrix()
+    # 给初值施加边界条件
+    MultigridMethod.f = MultigridMethod.grid.ApplyBoundaryMatrix(matrix = MultigridMethod.f, boundaryMatrix=MultigridMethod.boundary)
+
+    err = 1
+    MultigridMethod.restriction()
+    while err >= 0.001:
+        _, err = MultigridMethod.Iteration(Unit)
+    MultigridMethod.prolongation()
+    # while err >= 0.001:
+    #     _, err = MultigridMethod.Iteration(Zero)
+
+    solution = Solution(MultigridMethod.f)
+    print(MultigridMethod.errHistory)
+    PlotMatrix(MultigridMethod.f)
+        
+    return solution
+
 def ProblemTest():
     nlevel = 4
     xlower = 0
@@ -114,6 +144,23 @@ def ProblemTest():
     }
     squareGrid = RecGrid(nlevel = nlevel, xlower = xlower, xupper = xupper, ylower = ylower, yupper = yupper, boundaries = recBoundary)
     SolveMethod = LaplaceMultigrid
+    problem = Problem2D(SolveMethod = SolveMethod, grid = squareGrid)
+    solution = problem.solve()
+
+def ProblemP():
+    nlevel = 16
+    xlower = 0
+    xupper = np.pi
+    ylower = 0
+    yupper = np.pi
+    recBoundary = {
+        "upper": Boundary(type = BoundaryType.dirichlet, val = 0),
+        "lower": Boundary(type = BoundaryType.dirichlet, val = 0),
+        "lleft": Boundary(type = BoundaryType.dirichlet, val = 0),
+        "right": Boundary(type = BoundaryType.dirichlet, val = 0)
+    }
+    squareGrid = RecGrid(nlevel = nlevel, xlower = xlower, xupper = xupper, ylower = ylower, yupper = yupper, boundaries = recBoundary)
+    SolveMethod = PoissonMultigrid
     problem = Problem2D(SolveMethod = SolveMethod, grid = squareGrid)
     solution = problem.solve()
 
@@ -184,4 +231,4 @@ if __name__=="__main__":
                             
                             right
     '''
-    Problem4()
+    ProblemP()
