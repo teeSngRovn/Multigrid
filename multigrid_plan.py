@@ -1,6 +1,5 @@
 import numpy as np
 from enum import Enum
-import matplotlib.pyplot as plt
 
 class BoundaryType(Enum):
     none = 0
@@ -95,8 +94,8 @@ class RecGrid:
             if (n0 == p2.n0):
                 # 左右边界
                 for i in range(self.nlevel + 1):
-                    # 更希望他是dirichlet的边界而非neumann的边界
-                    if boundary[n0][i].type == BoundaryType.dirichlet: continue
+                    # 更希望他是dirichlet的边界而非其它的的边界
+                    if boundary[n0][i].type == BoundaryType.dirichlet: continue    
                     boundary[n0][i] = Boundary(type = edge.boundary.type, val = edge.boundary.val)
             else:
                 # 上下边界
@@ -132,14 +131,22 @@ class RecGrid:
         return f
     
     def ApplyBoundaryMatrix(self, matrix:'np.array', boundaryMatrix:'list[list[Boundary]]')->'np.array':
+        '''
+        通过边界矩阵给当前解施加边界条件
+        '''
         sizeY = matrix.shape[0]
         sizeX = matrix.shape[1]
         for i in range(sizeX):
             for j in range(sizeY):
-                # 判定是否为边界bingq
-                if (boundaryMatrix[i][j].type != BoundaryType.dirichlet): continue
-                matrix[i][j] = boundaryMatrix[i][j].val
-        
+                # 不同的边界条件的赋值处理
+                if (boundaryMatrix[i][j].type == BoundaryType.dirichlet): matrix[i][j] = boundaryMatrix[i][j].val
+                elif (boundaryMatrix[i][j].type == BoundaryType.discrete):
+                    if ((i + j) % 2 == 0):
+                        matrix[i][j] = boundaryMatrix[i][j].val[0]
+                    else:
+                        matrix[i][j] = boundaryMatrix[i][j].val[1]
+                else:
+                    continue
         return matrix
 
 class Multigrid:
@@ -183,8 +190,7 @@ class Multigrid:
     def Iteration(self, f0:'function')->"tuple[np.array, float]":
         '''
         传入一个迭代的方法和边界, 用该方法迭代一步
-        method : 要使用的松弛迭代方法
-        boundary : 边界条件
+        f0: 可能存在的右侧函数
         '''
         f0 = self.grid.constructMatrixFromFunction(f0)
         self.f, self.err = self.iterMethod(self.f, boundary = self.boundary, f0 = f0, ds=self.grid.ds)
@@ -209,14 +215,19 @@ class Multigrid:
             for j in range(sizeY):
                 if i == 0 or j == 0 or i == sizeX - 1 or j == sizeY - 1: 
                     # 边界，为了迎合Neumann边界条件
-                    f[i, j] = self.f[i * 2, j * 2]
+                    f[i][j] = self.f[i * 2][j * 2]
                 else:
                     # 内点
                     # i,j是粗网格的坐标，cx,cy是细网格的坐标
                     cx = i * 2
                     cy = j * 2
-                    f[i , j] = 1/4*(self.f[cx, cy]) + 1/8*(self.f[cx - 1, cy] 
-                                                + self.f[cx + 1, cy] + self.f[cx, cy - 1] + self.f[cx, cy + 1]) + 1/16*(self.f[cx - 1, cy - 1] + self.f[cx + 1, cy - 1] + self.f[cx - 1, cy + 1] + self.f[cx + 1, cy + 1])
+                    f[i][j] = 1/4*(
+                              self.f[cx][cy]
+                          ) + 1/8*(
+                              self.f[cx - 1][cy] + self.f[cx + 1][cy] + self.f[cx][cy - 1] + self.f[cx][cy + 1]
+                          ) + 1/16*(
+                              self.f[cx - 1][cy - 1] + self.f[cx + 1][cy - 1] + self.f[cx - 1][cy + 1] + self.f[cx + 1][cy + 1]
+                          )
         
         self.f = self.grid.ApplyBoundaryMatrix(matrix = f, boundaryMatrix=self.boundary)
 
@@ -253,6 +264,34 @@ class Multigrid:
 
 
 class RelaxationMethod:
+    def Jacobi(self, f: 'np.array', boundary:'tuple[list[list[Boundary]], float]', f0:'np.array', ds:float = 0.1):
+        '''
+        迭代求解一步
+        f : 当前的解
+        f0 : 泊松方程的矩阵
+        grid : 所构造的网格
+        '''
+        tmp_f = f.copy()
+        error:float = 0.0
+        sizeX = len(boundary)
+        sizeY = len(boundary[0])
+        for i in range(sizeX):
+            for j in range(sizeY):
+                if (boundary[i][j].type == BoundaryType.dirichlet): continue
+                if (boundary[i][j].type == BoundaryType.discrete): continue
+                if (boundary[i][j].type == BoundaryType.neumann):
+                    offsetI = boundary[i][j].val[0]
+                    offsetJ = boundary[i][j].val[1]
+                    val = tmp_f[i+offsetI][j+offsetJ]
+                    f[i][j] = val
+                if (boundary[i][j].type == BoundaryType.none):
+                    val = (tmp_f[i-1][j] + tmp_f[i+1][j] + tmp_f[i][j-1]+tmp_f[i][j+1] - (ds**2)*f0[i][j])/4
+                    dval = tmp_f[i][j] - val
+                    error = max(error, abs(dval))
+                    f[i][j] = val
+        
+        return f, error
+    
     def GaussSeidel(self, f: 'np.array', boundary:'tuple[list[list[Boundary]], float]', f0:'np.array', ds:float = 0.1):
         '''
         迭代求解一步
@@ -266,13 +305,14 @@ class RelaxationMethod:
         for i in range(sizeX):
             for j in range(sizeY):
                 if (boundary[i][j].type == BoundaryType.dirichlet): continue
+                if (boundary[i][j].type == BoundaryType.discrete): continue
                 if (boundary[i][j].type == BoundaryType.neumann):
                     offsetI = boundary[i][j].val[0]
                     offsetJ = boundary[i][j].val[1]
                     val = f[i+offsetI][j+offsetJ]
                     f[i][j] = val
                 if (boundary[i][j].type == BoundaryType.none):
-                    val = (f[i-1][j] + f[i+1][j] + f[i][j-1]+f[i][j+1] - ds*f0[i][j])/4
+                    val = (f[i-1][j] + f[i+1][j] + f[i][j-1]+f[i][j+1] - (ds**2)*f0[i][j])/4
                     dval = f[i][j] - val
                     error = max(error, abs(dval))
                     f[i][j] = val
@@ -294,74 +334,3 @@ class Problem2D:
     def solve(self)->"Solution":
         self.solution = self.method(self.grid)
         return self.solution
-
-
-def Unit(xx, yy):
-    return 1
-
-def Zero(xx, yy):
-    return 0
-
-def PlotMatrix(matrix, title:str):
-    plt.matshow(matrix,cmap=plt.cm.Reds)
-    plt.show()
-
-def LaplaceMultigrid(grid:'RecGrid')->'Solution':
-    '''
-    用松弛方法在多重网格法下求解给定参数的问题
-    '''
-    RelaxationMethods = RelaxationMethod()
-    MultigridMethod = Multigrid(RelaxationMethods.GaussSeidel, grid = grid)
-    # f代表当前迭代下的解, 生成初始解零构造
-    MultigridMethod.f = MultigridMethod.grid.constructZeroMatrix()
-    # boundary代表边界的矩阵表示
-    MultigridMethod.boundary:'list[list[Boundary]]' = MultigridMethod.grid.constructBoundaryMatrix()
-    # 给初值施加边界条件
-    MultigridMethod.f = MultigridMethod.grid.ApplyBoundaryMatrix(matrix = MultigridMethod.f, boundaryMatrix=MultigridMethod.boundary)
-
-    for _ in range(10):
-        PlotMatrix(MultigridMethod.f,"restriction")
-        MultigridMethod.restriction()
-        # PlotMatrix(MultigridMethod.f,"restriction")
-        _, err = MultigridMethod.Iteration(Zero)
-        # PlotMatrix(MultigridMethod.f,"iteration")
-        MultigridMethod.prolongation()
-        # PlotMatrix(MultigridMethod.f,"prolongation")
-
-    solution = Solution(MultigridMethod.f)
-    print(MultigridMethod.errHistory)
-        
-    return solution
-
-
-if __name__=="__main__":
-    '''
-    注: 这里的upper是从x,y方向看, x代表i行, y代表j列
-    Example:
-    →y(j) 0 - pi
-    ↓x(i) 0 - pi
-                            lleft
-                        
-                        [[1,2,3,4,5],
-                         [6,7,8,9,0],
-                lower    [1,2,3,4,5],   upper
-                         [6,7,8,9,0],
-                         [1,2,3,4,5]]       
-                            
-                            right
-    '''
-    nlevel = 4
-    xlower = 0
-    xupper = np.pi
-    ylower = 0
-    yupper = np.pi
-    recBoundary = {
-        "upper": Boundary(type = BoundaryType.dirichlet, val = 1),
-        "lower": Boundary(type = BoundaryType.dirichlet, val = 0),
-        "lleft": Boundary(type = BoundaryType.neumann, val = [1,0]),
-        "right": Boundary(type = BoundaryType.neumann, val = [-1,0])
-    }
-    squareGrid = RecGrid(nlevel = nlevel, xlower = xlower, xupper = xupper, ylower = ylower, yupper = yupper, boundaries = recBoundary)
-    SolveMethod = LaplaceMultigrid
-    problem = Problem2D(SolveMethod = SolveMethod, grid = squareGrid)
-    solution = problem.solve()
