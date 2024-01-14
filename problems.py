@@ -13,15 +13,15 @@ def Zero(xx, yy):
     return 0
 
 def Func(xx,yy):
-    return np.sin(10*np.pi*xx)*np.sin(10*np.pi*yy)
+    return np.cos(np.pi*xx/2)*np.cos(np.pi*yy/2)
 
 def PlotMatrix(matrix):
     # 指定颜色分辨率的边界
-    bounds = np.linspace(-1, 1, 21)  # 0到1之间分成11份
+    bounds = np.linspace(np.min(matrix), np.max(matrix), 100)  # 0到1之间分成11份
     # 创建一个颜色映射对象，并绑定到数据范围  
-    norm = mcolors.BoundaryNorm(bounds, plt.cm.Reds.N)
+    norm = mcolors.BoundaryNorm(bounds, plt.cm.coolwarm.N)
     # 使用 matshow 显示数据，并指定颜色映射和颜色分辨率  
-    plt.matshow(matrix, cmap=plt.cm.Reds, norm=norm)
+    plt.matshow(matrix, cmap=plt.cm.coolwarm, norm=norm)
     # 添加 colorbar
     plt.colorbar() 
     plt.show()
@@ -118,9 +118,11 @@ def PoissonMultigrid(grid:'RecGrid')->'Solution':
 
     err = 1
     MultigridMethod.restriction()
-    while err >= 0.001:
+    while err >= 0.00001:
         _, err = MultigridMethod.Iteration(Unit)
     MultigridMethod.prolongation()
+    while err >= 0.00001:
+        _, err = MultigridMethod.Iteration(Unit)
     
     solution = Solution(MultigridMethod.f)
     print(MultigridMethod.errHistory)
@@ -146,11 +148,11 @@ def ProblemTest():
     solution = problem.solve()
 
 def ProblemP():
-    nlevel = 16
-    xlower = 0
-    xupper = np.pi
-    ylower = 0
-    yupper = np.pi
+    nlevel = 128
+    xlower = -1
+    xupper = 1
+    ylower = -1
+    yupper = 1
     recBoundary = {
         "upper": Boundary(type = BoundaryType.dirichlet, val = 0),
         "lower": Boundary(type = BoundaryType.dirichlet, val = 0),
