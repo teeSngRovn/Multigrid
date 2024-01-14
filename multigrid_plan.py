@@ -262,7 +262,7 @@ class RelaxationMethod:
                 if (boundary[i][j].type == BoundaryType.none):
                     val = (f[i-1][j] + f[i+1][j] + f[i][j-1]+f[i][j+1])/4
                     dval = f[i][j] - val
-                    error = float(np.max(error, np.abs(dval)))
+                    error = max(error, abs(dval))
                     f[i][j] = val
         
         return f
@@ -274,14 +274,14 @@ class Solution:
 
 
 class Problem2D:
-    def __init__(self, f0: 'function', method:'Multigrid', grid:'RecGrid'):
+    def __init__(self, f0: 'function', SolveMethod:'function', grid:'RecGrid'):
         self.func = f0
         self.grid = grid
-        self.method = method
+        self.method = SolveMethod
         self.solution = Solution(None)
 
     def solve(self)->"Solution":
-        self.solution = self.method.solve(self.func, self.grid)
+        self.solution = self.method(self.func, self.grid)
         return self.solution
 
 
@@ -289,9 +289,36 @@ def Func(xx, yy):
     return 0*xx
 
 def PlotMatrix(matrix, title:str):
-    return
     plt.matshow(matrix,cmap=plt.cm.Reds)
     plt.show()
+
+def solve(f0:'function', grid:'RecGrid')->'Solution':
+    '''
+    用松弛方法在多重网格法下求解给定参数的问题
+    '''
+    RelaxationMethods = RelaxationMethod()
+    MultigridMethod = Multigrid(RelaxationMethods.GaussSeidel, level0 = nlevel)
+    # grid当前的网格
+    MultigridMethod.grid:'RecGrid' = grid.constructGrid(MultigridMethod.level)
+    # f代表当前迭代下的解
+    MultigridMethod.f = MultigridMethod.grid.constructSolutionMatrixFromFunction(f0)
+    # boundary代表边界的矩阵表示
+    MultigridMethod.boundary:'list[list[Boundary]]' = MultigridMethod.grid.constructBoundaryMatrix()
+    # 给初值施加边界条件
+    MultigridMethod.f = MultigridMethod.grid.ApplyBoundaryMatrix(matrix = MultigridMethod.f, boundaryMatrix=MultigridMethod.boundary)
+
+    for i in range(10):
+        PlotMatrix(MultigridMethod.f,"restriction")
+        MultigridMethod.restriction()
+        # PlotMatrix(MultigridMethod.f,"restriction")
+        MultigridMethod.Iteration(boundary = MultigridMethod.boundary)
+        # PlotMatrix(MultigridMethod.f,"iteration")
+        MultigridMethod.prolongation()
+        # PlotMatrix(MultigridMethod.f,"prolongation")
+
+    solution = Solution(MultigridMethod.f)
+        
+    return solution
 
 
 if __name__=="__main__":
@@ -322,7 +349,6 @@ if __name__=="__main__":
         "right": Boundary(type = BoundaryType.neumann, val = [-1,0])
     }
     squareGrid = RecGrid(nlevel = nlevel, xlower = xlower, xupper = xupper, ylower = ylower, yupper = yupper, boundaries = recBoundary)
-    RelaxationMethods = RelaxationMethod()
-    MultigridMethod = Multigrid(RelaxationMethods.GaussSeidel, level0 = nlevel)
-    problem = Problem2D(f0 = Func, method = MultigridMethod, grid = squareGrid)
+    SolveMethod = solve
+    problem = Problem2D(f0 = Func, SolveMethod = SolveMethod, grid = squareGrid)
     solution = problem.solve()
